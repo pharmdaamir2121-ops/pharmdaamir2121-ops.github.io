@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://pharmdaamir2121-ops.github.io/everydaycalc/sitemap.xml
