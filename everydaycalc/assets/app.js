@@ -24,13 +24,13 @@ const $=s=>document.querySelector(s);
 function slug(){return document.body.dataset.tool||''}
 function toolUrl(id){return 'tools/'+id+'/'}
 function renderHome(){let root=$('#tools');if(!root)return;root.innerHTML=tools.map(t=>'<a class="tool-card" href="'+toolUrl(t[0])+'"><div class="tool-icon">'+t[3]+'</div><h3>'+t[1]+'</h3><p>'+t[2]+'</p></a>').join('');let search=$('#search');search?.addEventListener('input',()=>{let q=search.value.toLowerCase();root.innerHTML=tools.filter(t=>t.join(' ').toLowerCase().includes(q)).map(t=>'<a class="tool-card" href="'+toolUrl(t[0])+'"><div class="tool-icon">'+t[3]+'</div><h3>'+t[1]+'</h3><p>'+t[2]+'</p></a>').join('')||'<p>No calculators found. Try another search.</p>'});$('#year').textContent=new Date().getFullYear()}
-const n=id=>Number(document.getElementById(id)?.value||0),v=id=>document.getElementById(id)?.value;
+const n=id=>Number(document.getElementById(id)?.value||0),v=id=>document.getElementById(id)?.value;const gcd=(x,y)=>y?gcd(y,x%y):Math.abs(x);
 function output(value,detail=''){let r=$('#result');r.classList.add('show');$('#answer').textContent=value;$('#detail').textContent=detail}
 function fmt(x,d=4){return Number.isFinite(x)?Number(x.toFixed(d)).toLocaleString(undefined,{maximumFractionDigits:d}):'Check your inputs'}
 function calculate(){let id=slug(),a,b,c,d,res,detail='';switch(id){
 case'percentage':a=n('a');b=n('b');res=$('#mode').value==='of'?a*b/100:$('#mode').value==='is'?(b?100*a/b:NaN):(b?(a-b)/b*100:NaN);detail=$('#mode').value==='of'?fmt(a)+'% of '+fmt(b):$('#mode').value==='is'?fmt(a)+' is '+fmt(res)+'% of '+fmt(b):'Percentage change from '+fmt(b)+' to '+fmt(a);break;
 case'tip':a=n('a');b=n('b');c=Math.max(1,n('c'));res=a*b/100;detail='Tip: '+fmt(res,2)+' · Total: '+fmt(a+res,2)+' · Per person: '+fmt((a+res)/c,2);res=fmt((a+res)/c,2)+' per person';break;
-case'ratio':a=n('a');b=n('b');let gcd=(x,y)=>y?gcd(y,x%y):Math.abs(x);let g=gcd(a,b);res=g?fmt(a/g,0)+' : '+fmt(b/g,0):'0 : 0';detail='Simplified ratio';break;
+case'ratio':a=n('a');b=n('b');let g=gcd(a,b);res=g?fmt(a/g,0)+' : '+fmt(b/g,0):'0 : 0';detail='Simplified ratio';break;
 case'proportion':a=n('a');b=n('b');c=n('c');res=a?fmt(b*c/a):'Cannot divide by zero';detail='If a : b = c : x, then x = (b × c) ÷ a.';break;
 case'slope':a=n('a');b=n('b');c=n('c');d=n('d');res=(d-b)!==0?fmt((d-b)/(c-a)):(c-a)===0?'Undefined (same point)':'Undefined (vertical line)';detail='Slope = (y₂ − y₁) ÷ (x₂ − x₁).';break;
 case'volume':a=n('a');b=n('b');c=n('c');res=$('#shape').value==='sphere'?(4/3*Math.PI*a**3):$('#shape').value==='cylinder'?Math.PI*a*a*b:a*b*c;detail='Cubic units. Sphere uses radius; cylinder uses radius and height; box uses length, width and height.';break;
@@ -42,7 +42,7 @@ case'time-duration':let t1=v('t1').split(':').map(Number),t2=v('t2').split(':').
 case'hours':a=n('h1')*60+n('m1');b=n('h2')*60+n('m2');let total=$('#op').value==='add'?a+b:a-b;res=(total<0?'-':'')+Math.floor(Math.abs(total)/60)+' hours '+Math.abs(total)%60+' minutes';detail='Combined duration.';break;
 case'gpa':let rows=[...document.querySelectorAll('.course')];let pts=0,credits=0;rows.forEach(row=>{let cr=Number(row.querySelector('.credit').value),gr=Number(row.querySelector('.grade').value);pts+=cr*gr;credits+=cr});res=credits?fmt(pts/credits,2):'Enter course credits';detail='Weighted by course credits. Uses the grade-point values you enter; grading scales vary by institution.';break;
 case'grade':a=n('a');b=n('b');res=b?fmt(a/b*100,2)+'%':'Enter possible points';detail=fmt(a)+' points earned out of '+fmt(b)+'.';break;
-case'final-grade':a=n('a');b=n('b');c=n('c');d=n('d');res=(1-b/100)>0?fmt((c-a*b/100)/(1-b/100),2)+'%':'Final exam weight must be below 100%';detail='Required final exam score to reach your target overall grade.';break;
+case'final-grade':a=n('a');b=n('b');c=n('c');d=n('d');res=d>0?fmt((c-a*b/100)/(d/100),2)+'%':'Final exam weight must be greater than zero';detail='Required final exam score to reach your target overall grade.';break;
 case'weighted-grade':let cats=[...document.querySelectorAll('.weight-row')],sum=0,w=0;cats.forEach(row=>{let score=Number(row.querySelector('.score').value),weight=Number(row.querySelector('.weight').value);sum+=score*weight;w+=weight});res=w?fmt(sum/w,2)+'%':'Enter category weights';detail='Weights are normalized to their total. Ideally, category weights should add to 100%.';break;
 case'average':let nums=v('nums').split(/[ ,;]+/).map(Number).filter(x=>Number.isFinite(x));if(!nums.length){res='Enter numbers separated by commas';break}let sorted=[...nums].sort((x,y)=>x-y);res='Mean: '+fmt(nums.reduce((x,y)=>x+y,0)/nums.length);detail='Median: '+fmt(sorted.length%2?sorted[(sorted.length-1)/2]:(sorted[sorted.length/2-1]+sorted[sorted.length/2])/2)+' · Range: '+fmt(sorted.at(-1)-sorted[0])+' · Count: '+nums.length;break;
 case'discount':a=n('a');b=n('b');res=fmt(a*(1-b/100),2);detail='You save '+fmt(a*b/100,2)+' ('+fmt(b)+'% discount).';break;
